@@ -1,0 +1,9 @@
+Independent verification — Sleep-Well Portfolio
+window: 2014-08-18 -> 2026-08-17   assets: IWDA.AS, EXSA.DE, EMIM.AS, IEAG.AS, IBGL.AS, 4GLD.DE
+weights: [0.1469, 0.0273, 0.0448, 0.0595, 0.0456, 0.6758]
+
+cagr          app=+0.108921  recomputed=+0.108921  diff=0.00e+00  MATCH
+vol           app=+0.108363  recomputed=+0.108363  diff=1.39e-17  MATCH
+max_drawdown  app=-0.146360  recomputed=-0.146360  diff=0.00e+00  MATCH
+
+RESULT: all values confirmed to 4 decimals
