@@ -1,12 +1,10 @@
 """Sage Invest — a robo-advisor onboarding built the MiFID II way.
 
-Four screens: ① assessment (questionnaire) → ② your investor profile →
-③ your portfolio dashboard, with evidence → ④ where it could take you.
-
-Knowledge unlocks products (appropriateness); risk answers set the target
-(suitability). The engine behind the recommendation is transparent:
-10,000 sampled allocations, filtered by the user's drawdown tolerance,
-best CAGR wins, always benchmarked against equal-weight.
+Two screens, deliberately: ① a 7-question assessment → ② one results page
+(profile → portfolio → projection). Knowledge unlocks products
+(appropriateness); risk answers set the target (suitability). The engine
+is transparent: 10,000 sampled allocations, filtered by the user's
+drawdown tolerance, best CAGR wins, always benchmarked vs equal-weight.
 """
 
 import json
@@ -17,7 +15,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from src import data, metrics, portfolio, profile, projection, scenarios
+from src import data, metrics, portfolio, profile, projection
 
 # design tokens, taken from the reference aesthetic: cream canvas, white
 # cards, sage greens, muted greys, soft red only for negatives
@@ -25,7 +23,6 @@ GREEN = "#4F6547"
 GREEN_DEEP = "#3C4F36"
 GREEN_SOFT = "#9BAF8E"
 GREEN_TINT = "#E7EDE2"
-INK = "#22271F"
 GREY = "#8B9086"
 FAINT = "#DDDBD3"
 RED = "#B8544B"
@@ -35,7 +32,7 @@ TIER_EMOJI = {"Beginner": "🌱", "Intermediate": "🌿", "Experienced": "🌳"}
 MAX_WEIGHT = 0.40  # concentration guardrail (see help text on fine-tune)
 
 st.set_page_config(page_title="Sage Invest", page_icon="🌿",
-                   layout="wide")
+                   layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
 <style>
@@ -57,9 +54,8 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     padding: 0.55rem 1.3rem;
     border: 1px solid #E4E2DA;
 }
-[data-testid="stSidebar"] {
-    background: #FFFFFF;
-    border-right: 1px solid #F1EFE9;
+[data-testid="stSidebar"], [data-testid="collapsedControl"] {
+    display: none;
 }
 .sage-stat {
     background: #FFFFFF; border: 1px solid #F1EFE9; border-radius: 20px;
@@ -111,10 +107,6 @@ if "step" not in st.session_state:
     st.session_state.step = 0
 
 
-def goto(step: int) -> None:
-    st.session_state.step = step
-
-
 def restart() -> None:
     for key in ("step", "answers", "profile", "amount", "override_tol"):
         st.session_state.pop(key, None)
@@ -137,50 +129,17 @@ def cached_table(tickers: tuple[str, ...],
     return portfolio.portfolio_table(returns, weights)
 
 
-# ------------------------------------------------------------------ sidebar
-st.sidebar.title("🌿 Sage Invest")
-st.sidebar.caption("Invest at the level you're actually ready for.")
-st.sidebar.markdown("---")
-st.sidebar.caption(
-    "Knowledge unlocks products; risk answers set the target — the same "
-    "two-assessment logic MiFID II requires of EU brokers.\n\n"
-    "Data: Yahoo Finance daily adjusted closes, EUR-listed UCITS "
-    "ETFs/ETCs. Educational project — not investment advice."
-)
-if st.session_state.step > 0:
-    st.sidebar.button("↺ Start over", on_click=restart)
-
-
-# =================================================================== step 0
+# ============================================================ ① assessment
 if st.session_state.step == 0:
-    st.title("Invest at the level you're ready for")
+    st.title("🌿 Sage Invest")
     st.markdown(f'<p style="color:{GREY};font-size:1.05rem;">Most '
                 'investing apps ask what you want. We first check what '
-                "you're ready for.</p>", unsafe_allow_html=True)
-    c1, c2, c3 = st.columns(3)
-    c1.markdown(stat_card("Step 1", "A 2-minute assessment",
-                          "7 questions"), unsafe_allow_html=True)
-    c2.markdown(stat_card("Step 2", "Your investor profile",
-                          "MiFID-style"), unsafe_allow_html=True)
-    c3.markdown(stat_card("Step 3", "A portfolio, with evidence",
-                          "10,000 candidates", dark=True),
+                "you're ready for — seven questions, two minutes. Your "
+                'knowledge decides <b>which products</b> you can access; '
+                'your answers on horizon and losses decide <b>how much '
+                'risk</b> fits you. Scored separately, the way EU '
+                'regulation (MiFID II) makes real advisors do it.</p>',
                 unsafe_allow_html=True)
-    st.write("")
-    st.markdown(
-        "Your knowledge decides **which products** you can access; your "
-        "answers on horizon and losses decide **how much risk** fits you. "
-        "Scored separately — the way EU regulation makes real advisors "
-        "do it. Every recommendation is stress-tested through real crises "
-        "and compared against simply splitting your money equally."
-    )
-    st.button("Start my assessment →", type="primary", on_click=goto,
-              args=(1,))
-
-# =================================================================== step 1
-elif st.session_state.step == 1:
-    st.title("Your assessment")
-    st.markdown(f'<p style="color:{GREY};">Two minutes. No wrong answers — '
-                'wrong products, only.</p>', unsafe_allow_html=True)
 
     answers = {}
     complete = True
@@ -198,21 +157,31 @@ elif st.session_state.step == 1:
         amount = st.number_input("**How much are you investing (€)?**",
                                  1_000, 10_000_000, 50_000, step=1_000)
 
-    if st.button("See my profile →", type="primary", disabled=not complete):
+    if st.button("See my portfolio →", type="primary",
+                 disabled=not complete):
         st.session_state.answers = answers
         st.session_state.profile = profile.score_answers(answers)
         st.session_state.amount = amount
         st.session_state.pop("override_tol", None)
-        goto(2)
+        st.session_state.step = 1
         st.rerun()
     if not complete:
         st.caption("Answer all seven questions to continue.")
+    st.caption("Data: Yahoo Finance daily adjusted closes, EUR-listed "
+               "UCITS ETFs/ETCs. Educational project — not investment "
+               "advice.")
 
-# =================================================================== step 2
-elif st.session_state.step == 2:
+# =============================================================== ② results
+else:
     prof = st.session_state.profile
-    st.title("Your investor profile")
+    amount = st.session_state.amount
+    tickers = tuple(data.TIERS[prof.tier])
 
+    head, retake = st.columns([5, 1])
+    head.title("Your portfolio")
+    retake.button("↺ Retake", on_click=restart)
+
+    # ------------------------------------------------------- profile strip
     c1, c2, c3 = st.columns(3)
     c1.markdown(stat_card("Product access", f"{TIER_EMOJI[prof.tier]} "
                           f"{prof.tier}",
@@ -224,51 +193,22 @@ elif st.session_state.step == 2:
     c3.markdown(stat_card("Loss limit", f"−{prof.tolerance:.0%}",
                           f"~{prof.horizon_years}y horizon", dark=True),
                 unsafe_allow_html=True)
-    st.write("")
+    locked = [t for t in data.TICKERS if t not in tickers]
+    if locked:
+        st.caption(f"🔒 Locked at your knowledge level: "
+                   f"{', '.join(data.TICKERS[t] for t in locked)} — "
+                   f"products are earned by understanding, not appetite.")
+    else:
+        st.caption("All 11 products unlocked — including a Bitcoin ETC "
+                   "and a 2x leveraged fund. Your loss limit still "
+                   "decides how much of them you get.")
+    if prof.capped:
+        st.warning("Your answers suggested more appetite, but you need "
+                   "this money within 3 years — so we capped you at "
+                   "Cautious. A short horizon can't ride out a bear "
+                   "market, however brave it feels today.")
 
-    left, right = st.columns(2)
-    with left, st.container(border=True):
-        st.subheader("What you can buy")
-        for t in data.TIERS[prof.tier]:
-            st.markdown(f"- {data.TICKERS[t]}")
-        locked = [t for t in data.TICKERS if t not in data.TIERS[prof.tier]]
-        if locked:
-            st.markdown("**🔒 Locked for now** — products are earned by "
-                        "understanding, not appetite:")
-            for t in locked:
-                st.markdown(f"- {data.TICKERS[t]}")
-        else:
-            st.markdown("**All products unlocked** — including a Bitcoin "
-                        "ETC and a 2x leveraged fund. Understanding them "
-                        "is exactly why the next screen still limits how "
-                        "much of them you get.")
-    with right, st.container(border=True):
-        st.subheader("How much risk fits you")
-        st.markdown(
-            f"We'll only recommend portfolios whose worst historical fall "
-            f"stayed within **−{prof.tolerance:.0%}**."
-        )
-        if prof.capped:
-            st.warning(
-                "Your answers suggested more appetite, but you need this "
-                "money within 3 years — so we capped you at Cautious. "
-                "A short horizon can't ride out a bear market, however "
-                "brave it feels today."
-            )
-        st.markdown(f"Projection horizon: **~{prof.horizon_years} years**, "
-                    f"from your answer on when you need the money.")
-
-    c1, c2 = st.columns([1, 5])
-    c1.button("← Retake", on_click=restart)
-    c2.button("Build my portfolio →", type="primary", on_click=goto,
-              args=(3,))
-
-# =================================================================== step 3
-elif st.session_state.step == 3:
-    prof = st.session_state.profile
-    amount = st.session_state.amount
-    tickers = tuple(data.TIERS[prof.tier])
-
+    # ------------------------------------------------------------- engine
     prices, source = cached_prices(tickers)
     if source == "snapshot":
         st.info("⚠️ Live download unavailable — using the frozen data "
@@ -277,19 +217,14 @@ elif st.session_state.step == 3:
     window = (str(prices.index.min().date()),
               str(prices.index.max().date()))
 
-    st.title("Your portfolio")
-    st.markdown(f'<p style="color:{GREY};">{prof.tier} universe · '
-                f'{window[0]} → {window[1]} · max {MAX_WEIGHT:.0%} per '
-                'fund</p>', unsafe_allow_html=True)
-
     if "override_tol" not in st.session_state:
         st.session_state.override_tol = int(prof.tolerance * 100)
     with st.expander("🎛️ Fine-tune (defaults come from your profile)"):
         tol_pct = st.slider(
             "Drawdown tolerance", 5, 50, step=1, format="-%d%%",
             key="override_tol",
-            help="Your profile set this; move it to explore. The "
-                 "recommendation updates live.")
+            help="Your profile set this; move it to explore. Everything "
+                 "below updates live.")
     tolerance = tol_pct / 100
 
     table = cached_table(tickers, window[1])
@@ -306,6 +241,13 @@ elif st.session_state.step == 3:
         # portfolio available and say plainly why the target was missed.
         best = table.loc[table["max_drawdown"].idxmax()]
         missed = True
+        st.warning(
+            f"**Straight talk:** nothing in your universe stayed within "
+            f"−{tolerance:.0%} over {window[0]} → {window[1]} — the "
+            f"calmest option still fell {best['max_drawdown']:.1%}. "
+            f"We're showing that calmest portfolio. A real advisor would "
+            f"add cash or money-market funds here."
+        )
 
     best_weights = np.array([best[f"w_{t}"] for t in tickers])
     best_port = metrics.portfolio_returns(returns, best_weights)
@@ -313,20 +255,9 @@ elif st.session_state.step == 3:
     ew_port = metrics.portfolio_returns(returns, ew_weights)
     portfolio.save_recommendation(best, list(tickers), window, tolerance)
 
-    if missed:
-        st.warning(
-            f"**Straight talk:** nothing in your universe stayed within "
-            f"−{tolerance:.0%} over this period — the calmest option "
-            f"still fell {best['max_drawdown']:.1%}. We're showing that "
-            f"calmest portfolio. A real advisor would add cash or "
-            f"money-market funds here, which this app's universe "
-            f"deliberately excludes."
-        )
-
-    # ------------------------------------------------------- stat card row
+    # ------------------------------------------------------- verdict cards
     recovery = metrics.recovery_days(best_port)
     grown = amount * (1 + best_port).prod()
-    ew_ok = ew["max_drawdown"] >= -tolerance
     c1, c2, c3, c4 = st.columns(4)
     c1.markdown(stat_card("Historical return", f"{best['cagr']:.1%}/yr",
                           f"{best['cagr'] - ew['cagr']:+.1%} vs 1/N",
@@ -342,14 +273,14 @@ elif st.session_state.step == 3:
                           positive=recovery is not None),
                 unsafe_allow_html=True)
     c4.markdown(stat_card(f"€{amount:,.0f} became", f"€{grown:,.0f}",
-                          "this window", dark=True),
+                          f"{window[0][:4]}–{window[1][:4]}", dark=True),
                 unsafe_allow_html=True)
     st.write("")
 
-    # ----------------------------------------------------- allocation + 1/N
+    # ------------------------------------------- allocation + drawdown row
     left, right = st.columns([2, 3])
     with left, st.container(border=True):
-        st.subheader("Allocation")
+        st.subheader("Where your money goes")
         alloc = pd.DataFrame({
             "Fund": [data.TICKERS[t] for t in tickers],
             "Weight": best_weights,
@@ -363,55 +294,28 @@ elif st.session_state.step == 3:
                 "Amount (€)": st.column_config.NumberColumn(format="€%.0f"),
             },
         )
-        if ew_ok:
+        if ew["max_drawdown"] >= -tolerance:
             st.markdown(
-                f"**vs equal-weight:** 1/N also stayed within your limit "
-                f"(worst {ew['max_drawdown']:.1%}) at {ew['cagr']:.1%}/yr "
-                f"— the optimizer "
+                f"**vs splitting equally:** 1/N also stayed within your "
+                f"limit (worst {ew['max_drawdown']:.1%}) at "
+                f"{ew['cagr']:.1%}/yr — the optimizer "
                 f"{'earns' if best['cagr'] > ew['cagr'] else 'does NOT earn'}"
                 f" its keep here."
             )
         else:
             st.markdown(
-                f"**vs equal-weight:** splitting equally fell "
+                f"**vs splitting equally:** 1/N fell "
                 f"**{ew['max_drawdown']:.1%}** at its worst — beyond your "
-                f"limit. For your profile, 1/N is not a safe default."
+                f"limit. For your profile it is not a safe default."
             )
     with right, st.container(border=True):
-        st.subheader("Every candidate, judged by your limit")
-        plot_df = table.copy()
-        plot_df["Within limit"] = plot_df["max_drawdown"] >= -tolerance
-        fig = px.scatter(plot_df, x="vol", y="cagr", color="Within limit",
-                         color_discrete_map={True: GREEN_SOFT,
-                                             False: FAINT},
-                         labels={"vol": "Annualized volatility",
-                                 "cagr": "CAGR"},
-                         opacity=0.45, render_mode="webgl")
-        fig.add_scatter(x=[ew["vol"]], y=[ew["cagr"]],
-                        mode="markers+text",
-                        marker=dict(size=12, symbol="diamond", color=GREY),
-                        text=["equal-weight"], textposition="top center",
-                        name="Equal-weight")
-        fig.add_scatter(x=[best["vol"]], y=[best["cagr"]],
-                        mode="markers+text",
-                        marker=dict(size=16, symbol="star",
-                                    color=GREEN_DEEP),
-                        text=["yours"], textposition="top center",
-                        name="Yours")
-        fig.update_layout(yaxis_tickformat=".0%", xaxis_tickformat=".0%",
-                          legend_title="")
-        st.plotly_chart(style_fig(fig, 380), width="stretch")
-
-    # ------------------------------------------------- drawdowns + scenario
-    left, right = st.columns(2)
-    with left, st.container(border=True):
         st.subheader("The falls you'd have lived through")
         dd_best = (metrics.wealth_curve(best_port)
                    / metrics.wealth_curve(best_port).cummax() - 1)
         dd_ew = (metrics.wealth_curve(ew_port)
                  / metrics.wealth_curve(ew_port).cummax() - 1)
         fig = go.Figure()
-        fig.add_scatter(x=dd_ew.index, y=dd_ew, name="Equal-weight",
+        fig.add_scatter(x=dd_ew.index, y=dd_ew, name="Splitting equally",
                         line=dict(color=FAINT, width=1.5))
         fig.add_scatter(x=dd_best.index, y=dd_best, name="Yours",
                         line=dict(color=GREEN, width=2),
@@ -422,103 +326,25 @@ elif st.session_state.step == 3:
         fig.update_layout(yaxis_tickformat=".0%",
                           yaxis_title="Drawdown from peak")
         st.plotly_chart(style_fig(fig, 360), width="stretch")
-    with right, st.container(border=True):
-        st.subheader("Replay a crisis")
-        avail = [k for k in scenarios.STRESS_WINDOWS
-                 if scenarios.available(returns, k)]
-        unavail = [k for k in scenarios.STRESS_WINDOWS if k not in avail]
-        key = st.selectbox("Pick an episode", avail, index=len(avail) - 1)
-        st.caption(scenarios.STRESS_WINDOWS[key]["story"])
-        rb = scenarios.replay(returns, best_weights, key)
-        re_ = scenarios.replay(returns, ew_weights, key)
-        fig = go.Figure()
-        fig.add_scatter(x=re_.index, y=re_, name="Equal-weight",
-                        line=dict(color=FAINT, width=1.5))
-        fig.add_scatter(x=rb.index, y=rb, name="Yours",
-                        line=dict(color=GREEN, width=2))
-        fig.update_layout(yaxis_title="Value of €1 at episode start")
-        st.plotly_chart(style_fig(fig, 300), width="stretch")
-        if unavail:
-            st.caption(f"ℹ️ Not replayable in your tier: "
-                       f"{', '.join(unavail)} — its youngest asset only "
-                       f"lists from {window[0]}.")
 
-    with st.expander("Under the hood: correlations, pipeline, limitations"):
-        cc, qc = st.columns(2)
-        with cc:
-            fig = px.imshow(returns.corr().round(2), text_auto=True,
-                            color_continuous_scale="Greens", zmin=-1,
-                            zmax=1)
-            st.plotly_chart(style_fig(fig, 380), width="stretch")
-        with qc:
-            st.markdown(
-                f"- Source: Yahoo Finance adjusted closes ({source} "
-                f"mode)\n"
-                f"- Common window starts {window[0]} — the first date "
-                f"every asset in YOUR tier trades\n"
-                f"- Exchange-holiday gaps forward-filled up to 3 days; "
-                f"longer gaps dropped, never invented\n"
-                f"- Max drawdown = deepest peak-to-trough fall; the risk "
-                f"an investor actually feels\n"
-                f"- Past drawdowns underestimate future ones (no 2008 "
-                f"here); costs and taxes excluded\n"
-                f"- `verify.py` recomputes the recommendation's numbers "
-                f"from raw data with independent code"
-            )
-
-    c1, c2 = st.columns([1, 5])
-    c1.button("← My profile", on_click=goto, args=(2,))
-    c2.button("Where could this take me? →", type="primary",
-              on_click=goto, args=(4,))
-
-# =================================================================== step 4
-else:
-    prof = st.session_state.profile
-    amount = st.session_state.amount
-    tickers = tuple(data.TIERS[prof.tier])
-    prices, _ = cached_prices(tickers)
-    returns = metrics.daily_returns(prices)
-
-    rec = json.loads(portfolio.RECOMMENDATION_PATH.read_text())
-    weights = np.array(rec["weights"])
-    port = metrics.portfolio_returns(returns, weights)
-
-    st.title("Where this could take you")
-    st.markdown(f'<p style="color:{GREY};">€{amount:,.0f} · '
-                f'{prof.horizon_years} years · 2,000 alternative futures, '
-                'built by reshuffling your portfolio\'s own history — '
-                'crash days included.</p>', unsafe_allow_html=True)
-
-    window_years = len(port) / metrics.TRADING_DAYS
-    sample_cagr = metrics.cagr(port)
+    # ---------------------------------------------------------- projection
+    st.subheader(f"Where this could take €{amount:,.0f} in "
+                 f"{prof.horizon_years} years")
+    window_years = len(best_port) / metrics.TRADING_DAYS
+    sample_cagr = metrics.cagr(best_port)
     if prof.horizon_years > window_years:
         st.warning(
             f"**Extrapolation alert:** your horizon "
             f"({prof.horizon_years} years) is longer than the data behind "
             f"this portfolio ({window_years:.0f} years averaging "
-            f"{sample_cagr:.0%}/year — an unusually "
-            f"{'good' if sample_cagr > 0.09 else 'specific'} stretch). "
-            f"The simulation can only reshuffle those years, so treat the "
-            f"upper paths as 'if the recent past repeats forever', not as "
-            f"a forecast. Long-run diversified equity returns have "
-            f"historically been nearer 7–9% per year."
+            f"{sample_cagr:.0%}/year). The simulation can only reshuffle "
+            f"those years, so treat the upper paths as 'if the recent "
+            f"past repeats forever', not as a forecast. Long-run "
+            f"diversified equity returns have historically been nearer "
+            f"7–9% per year."
         )
-    paths = projection.simulate(port, amount, prof.horizon_years)
+    paths = projection.simulate(best_port, amount, prof.horizon_years)
     end = paths.iloc[-1]
-
-    c1, c2, c3 = st.columns(3)
-    c1.markdown(stat_card("Median future", f"€{end['p50']:,.0f}",
-                          f"in {prof.horizon_years} years", dark=True),
-                unsafe_allow_html=True)
-    c2.markdown(stat_card("1 in 4 end below", f"€{end['p25']:,.0f}"),
-                unsafe_allow_html=True)
-    c3.markdown(stat_card("1 in 20 end below", f"€{end['p5']:,.0f}",
-                          "above what you put in"
-                          if end["p5"] >= amount else "below what you put in",
-                          positive=end["p5"] >= amount),
-                unsafe_allow_html=True)
-    st.write("")
-
     with st.container(border=True):
         fig = go.Figure()
         fig.add_scatter(x=paths.index, y=paths["p95"], line=dict(width=0),
@@ -538,19 +364,77 @@ else:
                       annotation_text="what you put in")
         fig.update_layout(xaxis_title="Years",
                           yaxis_title="Portfolio value (€)")
-        st.plotly_chart(style_fig(fig, 430), width="stretch")
+        st.plotly_chart(style_fig(fig, 400), width="stretch")
+        st.markdown(
+            f"2,000 futures built by reshuffling this portfolio's own "
+            f"history, crash days included. Median: "
+            f"**€{end['p50']:,.0f}**. One in twenty ends below "
+            f"**€{end['p5']:,.0f}** — "
+            f"{'still above' if end['p5'] >= amount else 'below'} what "
+            f"you put in. If that floor worries you, retake the "
+            f"assessment with more honest answers — that's what it's for."
+        )
 
-    st.markdown(
-        f"**Reading it honestly:** if the range above worries you — "
-        f"especially the €{end['p5']:,.0f} floor — retake the assessment "
-        f"with more honest answers. That's what it's for."
-    )
-    st.caption(
-        "Limitations: futures are drawn from the same distribution as the "
-        "past window — no new-crisis imagination, no costs, taxes or "
-        "inflation. This is a study project, not investment advice."
-    )
+    # ------------------------------------------------- evidence, on demand
+    with st.expander("📋 Evidence: method, correlations, pipeline, "
+                     "limitations"):
+        sc, cc = st.columns(2)
+        with sc:
+            st.markdown("**Every candidate we considered**")
+            plot_df = table.copy()
+            plot_df["Within limit"] = plot_df["max_drawdown"] >= -tolerance
+            fig = px.scatter(plot_df, x="vol", y="cagr",
+                             color="Within limit",
+                             color_discrete_map={True: GREEN_SOFT,
+                                                 False: FAINT},
+                             labels={"vol": "Annualized volatility",
+                                     "cagr": "CAGR"},
+                             opacity=0.45, render_mode="webgl")
+            fig.add_scatter(x=[ew["vol"]], y=[ew["cagr"]],
+                            mode="markers+text",
+                            marker=dict(size=12, symbol="diamond",
+                                        color=GREY),
+                            text=["equal-weight"],
+                            textposition="top center", name="Equal-weight")
+            fig.add_scatter(x=[best["vol"]], y=[best["cagr"]],
+                            mode="markers+text",
+                            marker=dict(size=16, symbol="star",
+                                        color=GREEN_DEEP),
+                            text=["yours"], textposition="top center",
+                            name="Yours")
+            fig.update_layout(yaxis_tickformat=".0%",
+                              xaxis_tickformat=".0%", legend_title="")
+            st.plotly_chart(style_fig(fig, 340), width="stretch")
+            st.markdown("**Asset correlations (daily returns)**")
+            fig = px.imshow(returns.corr().round(2), text_auto=True,
+                            color_continuous_scale="Greens", zmin=-1,
+                            zmax=1)
+            st.plotly_chart(style_fig(fig, 340), width="stretch")
+        with cc:
+            st.markdown(
+                f"**Method** — {len(table):,} random long-only "
+                f"allocations (max {MAX_WEIGHT:.0%} per fund) over your "
+                f"{len(tickers)}-asset universe; keep those whose worst "
+                f"historical fall stayed within your limit; recommend "
+                f"the highest-CAGR survivor. Drawdown constraints are "
+                f"non-convex, so transparent sampling beats a black-box "
+                f"optimizer at this asset count.\n\n"
+                f"**Pipeline** — Yahoo Finance adjusted closes "
+                f"({source} mode); common window starts {window[0]}, "
+                f"the first date every asset in your tier trades; "
+                f"exchange-holiday gaps forward-filled up to 3 days; "
+                f"longer gaps dropped, never invented.\n\n"
+                f"**Limitations** — past drawdowns underestimate future "
+                f"ones (no 2008 in this window); costs and taxes "
+                f"excluded; rebalancing to constant weights assumed; "
+                f"projection reshuffles the past, it cannot imagine new "
+                f"crises.\n\n"
+                f"**Verification** — `verify.py` recomputes the "
+                f"recommendation's return, volatility and worst fall "
+                f"from raw data with fully independent code; agreement "
+                f"to 4 decimals is required."
+            )
 
-    c1, c2 = st.columns([1, 5])
-    c1.button("← My portfolio", on_click=goto, args=(3,))
-    c2.button("↺ Start over", key="restart_end", on_click=restart)
+    st.caption("Data: Yahoo Finance daily adjusted closes, EUR-listed "
+               "UCITS ETFs/ETCs. Educational project — not investment "
+               "advice.")

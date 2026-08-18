@@ -1,9 +1,9 @@
 Independent verification — Lakers Advisor
-window: 2020-06-08 -> 2026-08-18   assets: IWDA.AS, EXSA.DE, EMIM.AS, IEAG.AS, IBGL.AS, 4GLD.DE, EQQQ.DE, IPRP.AS, IUSN.DE, BTCE.DE, CL2.PA
-weights: [0.0987, 0.0116, 0.0437, 0.0105, 0.0413, 0.2179, 0.0317, 0.0159, 0.0313, 0.2002, 0.2971]
+window: 2016-08-18 -> 2026-08-18   assets: IWDA.AS, EXSA.DE, EMIM.AS, IEAG.AS, IBGL.AS, 4GLD.DE
+weights: [0.112, 0.0079, 0.1793, 0.2406, 0.073, 0.3871]
 
-cagr          app=+0.239137  recomputed=+0.239137  diff=1.12e-09  MATCH
-vol           app=+0.199156  recomputed=+0.199156  diff=1.44e-09  MATCH
-max_drawdown  app=-0.320298  recomputed=-0.320298  diff=5.17e-09  MATCH
+cagr          app=+0.078583  recomputed=+0.078551  diff=3.19e-05  MATCH
+vol           app=+0.083843  recomputed=+0.083827  diff=1.63e-05  MATCH
+max_drawdown  app=-0.148848  recomputed=-0.148848  diff=2.44e-08  MATCH
 
 RESULT: all values confirmed to 4 decimals
