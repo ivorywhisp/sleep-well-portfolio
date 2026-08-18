@@ -1,13 +1,12 @@
 """Sage Invest — a robo-advisor onboarding built the MiFID II way.
 
-Two screens, deliberately: ① a 7-question assessment → ② one results page
-(profile → portfolio → projection). Knowledge unlocks products
-(appropriateness); risk answers set the target (suitability). The engine
-is transparent: 10,000 sampled allocations, filtered by the user's
-drawdown tolerance, best CAGR wins, always benchmarked vs equal-weight.
+Flow: a one-line welcome → seven questions asked one at a time, big and
+tappable → a single results page (profile → portfolio → projection).
+Knowledge unlocks products (appropriateness); risk answers set the
+target (suitability). The engine is transparent: 10,000 sampled
+allocations, filtered by the user's drawdown tolerance, best CAGR wins,
+always benchmarked vs equal-weight.
 """
-
-import json
 
 import numpy as np
 import pandas as pd
@@ -71,8 +70,30 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 .sage-pill { display: inline-block; border-radius: 999px; padding: 2px 10px;
              font-size: 0.72rem; font-weight: 700; margin-left: 8px;
              vertical-align: middle; }
+.sage-hero { font-size: 3.2rem; font-weight: 800; letter-spacing: -0.03em;
+             line-height: 1.1; color: #22271F; margin: 2.5rem 0 0.8rem; }
+.sage-hero-sub { font-size: 1.15rem; color: #8B9086; margin-bottom: 1.6rem;
+                 max-width: 34rem; }
+.sage-q { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em;
+          color: #22271F; margin: 1.6rem 0 1.2rem; max-width: 40rem; }
 </style>
 """, unsafe_allow_html=True)
+
+QUIZ_CSS = """
+<style>
+.stButton > button {
+    width: 100%;
+    text-align: left;
+    font-size: 1.06rem;
+    padding: 1rem 1.3rem;
+    border-radius: 16px;
+    background: #FFFFFF;
+    border: 1px solid #F1EFE9;
+    box-shadow: 0 1px 3px rgba(34,39,31,0.05);
+}
+.stButton > button:hover { border-color: #4F6547; color: #3C4F36; }
+</style>
+"""
 
 
 def stat_card(label: str, value: str, pill: str | None = None,
@@ -103,14 +124,32 @@ def style_fig(fig: go.Figure, height: int) -> go.Figure:
 
 
 # ------------------------------------------------------------ state helpers
-if "step" not in st.session_state:
-    st.session_state.step = 0
+if "view" not in st.session_state:
+    st.session_state.view = "welcome"   # welcome -> quiz -> results
+    st.session_state.q_index = 0
+    st.session_state.answers = {}
 
 
 def restart() -> None:
-    for key in ("step", "answers", "profile", "amount", "override_tol"):
+    for key in ("view", "q_index", "answers", "profile", "amount",
+                "override_tol"):
         st.session_state.pop(key, None)
-    st.session_state.step = 0
+    st.session_state.view = "welcome"
+    st.session_state.q_index = 0
+    st.session_state.answers = {}
+
+
+def start_quiz() -> None:
+    st.session_state.view = "quiz"
+
+
+def choose(key: str, idx: int) -> None:
+    st.session_state.answers[key] = idx
+    st.session_state.q_index += 1
+
+
+def go_back() -> None:
+    st.session_state.q_index = max(0, st.session_state.q_index - 1)
 
 
 # ------------------------------------------------------------ cached engine
@@ -129,49 +168,59 @@ def cached_table(tickers: tuple[str, ...],
     return portfolio.portfolio_table(returns, weights)
 
 
-# ============================================================ ① assessment
-if st.session_state.step == 0:
-    st.title("🌿 Sage Invest")
-    st.markdown(f'<p style="color:{GREY};font-size:1.05rem;">Most '
-                'investing apps ask what you want. We first check what '
-                "you're ready for — seven questions, two minutes. Your "
-                'knowledge decides <b>which products</b> you can access; '
-                'your answers on horizon and losses decide <b>how much '
-                'risk</b> fits you. Scored separately, the way EU '
-                'regulation (MiFID II) makes real advisors do it.</p>',
+# =============================================================== ① welcome
+if st.session_state.view == "welcome":
+    st.markdown('<div class="sage-hero">Hi 👋<br>Welcome to the future '
+                'of investing.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sage-hero-sub">Seven quick questions, and '
+                "we'll show you the portfolio you're actually ready for "
+                '— with the evidence to prove it.</div>',
                 unsafe_allow_html=True)
+    st.button("Let's go →", type="primary", on_click=start_quiz)
+    st.caption("Built the way EU regulation (MiFID II) makes real "
+               "advisors work: your knowledge unlocks products, your "
+               "answers set the risk. Educational project — not "
+               "investment advice.")
 
-    answers = {}
-    complete = True
-    for key, q in profile.QUESTIONS.items():
-        with st.container(border=True):
-            choice = st.radio(f"**{q['text']}**",
-                              [label for label, _ in q["options"]],
-                              index=None, key=f"q_{key}")
-        if choice is None:
-            complete = False
-        else:
-            answers[key] = [label for label, _ in q["options"]].index(choice)
+# ================================================================== ② quiz
+elif st.session_state.view == "quiz":
+    st.markdown(QUIZ_CSS, unsafe_allow_html=True)
+    questions = list(profile.QUESTIONS.items())
+    i = st.session_state.q_index
 
-    with st.container(border=True):
-        amount = st.number_input("**How much are you investing (€)?**",
-                                 1_000, 10_000_000, 50_000, step=1_000)
+    if i < len(questions):
+        key, q = questions[i]
+        st.progress((i) / (len(questions) + 1),
+                    text=f"Question {i + 1} of {len(questions)}")
+        st.markdown(f'<div class="sage-q">{q["text"]}</div>',
+                    unsafe_allow_html=True)
+        mid, _ = st.columns([3, 2])
+        with mid:
+            for idx, (label, _pts) in enumerate(q["options"]):
+                st.button(label, key=f"opt_{key}_{idx}",
+                          on_click=choose, args=(key, idx))
+        if i > 0:
+            st.button("← Back", key="back", on_click=go_back)
+    else:
+        st.progress(len(questions) / (len(questions) + 1),
+                    text="Last step")
+        st.markdown('<div class="sage-q">How much are you '
+                    'investing?</div>', unsafe_allow_html=True)
+        mid, _ = st.columns([2, 3])
+        with mid:
+            amount = st.number_input("Amount (€)", 1_000, 10_000_000,
+                                     50_000, step=1_000,
+                                     label_visibility="collapsed")
+        if st.button("See my portfolio →", type="primary"):
+            st.session_state.profile = profile.score_answers(
+                st.session_state.answers)
+            st.session_state.amount = amount
+            st.session_state.pop("override_tol", None)
+            st.session_state.view = "results"
+            st.rerun()
+        st.button("← Back", key="back_amount", on_click=go_back)
 
-    if st.button("See my portfolio →", type="primary",
-                 disabled=not complete):
-        st.session_state.answers = answers
-        st.session_state.profile = profile.score_answers(answers)
-        st.session_state.amount = amount
-        st.session_state.pop("override_tol", None)
-        st.session_state.step = 1
-        st.rerun()
-    if not complete:
-        st.caption("Answer all seven questions to continue.")
-    st.caption("Data: Yahoo Finance daily adjusted closes, EUR-listed "
-               "UCITS ETFs/ETCs. Educational project — not investment "
-               "advice.")
-
-# =============================================================== ② results
+# =============================================================== ③ results
 else:
     prof = st.session_state.profile
     amount = st.session_state.amount
