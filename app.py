@@ -168,6 +168,16 @@ def cached_table(tickers: tuple[str, ...],
     return portfolio.portfolio_table(returns, weights)
 
 
+@st.cache_data(show_spinner="Getting a second opinion (skfolio)…")
+def cached_second_opinion(tickers: tuple[str, ...], window_end: str,
+                          tol_pct: int) -> np.ndarray:
+    """Convex-optimizer benchmark; import deferred so the quiz stays fast."""
+    from src import crosscheck
+    prices, _ = cached_prices(tickers)
+    returns = metrics.daily_returns(prices)
+    return crosscheck.second_opinion(returns, tol_pct / 100, MAX_WEIGHT)
+
+
 # =============================================================== ① welcome
 if st.session_state.view == "welcome":
     st.markdown('<div class="sage-hero">Hi 👋<br>Welcome to the future '
@@ -483,6 +493,46 @@ else:
                 f"from raw data with fully independent code; agreement "
                 f"to 4 decimals is required."
             )
+        st.markdown("**Second opinion — skfolio (convex optimizer, "
+                    "seen in class)**")
+        try:
+            sk_w = cached_second_opinion(tickers, window[1], tol_pct)
+            sk_port = metrics.portfolio_returns(returns, sk_w)
+            sk_cagr = metrics.cagr(sk_port)
+            sk_dd = metrics.max_drawdown(sk_port)
+            st.markdown(
+                f"skfolio's `MeanRisk` solves the same problem exactly — "
+                f"maximize return with your loss limit and the "
+                f"{MAX_WEIGHT:.0%} cap as constraints. It lands at "
+                f"**{sk_cagr:.1%}/yr** with a worst fall of "
+                f"**{sk_dd:.1%}** (measured with our own compounded "
+                f"metrics), vs our sampled **{best['cagr']:.1%}/yr**. "
+                + ("Near-identical — evidence our sampled answer is "
+                   "close to optimal."
+                   if abs(sk_cagr - best["cagr"]) < 0.02 else
+                   "The optimizer earns its extra return by piling "
+                   "assets at their caps (a corner solution); we display "
+                   "the sampled landscape and keep the optimizer as a "
+                   "cross-check.")
+            )
+            compare = pd.DataFrame({
+                "Fund": [data.TICKERS[t] for t in tickers],
+                "Ours": best_weights,
+                "skfolio": sk_w,
+            }).sort_values("Ours", ascending=False)
+            st.dataframe(
+                compare, hide_index=True,
+                column_config={
+                    "Ours": st.column_config.NumberColumn(
+                        format="percent"),
+                    "skfolio": st.column_config.NumberColumn(
+                        format="percent"),
+                },
+            )
+        except Exception:
+            st.caption("skfolio cross-check unavailable in this "
+                       "environment — the sampled recommendation above "
+                       "is unaffected.")
 
     st.caption("Data: Yahoo Finance daily adjusted closes, EUR-listed "
                "UCITS ETFs/ETCs. Educational project — not investment "
