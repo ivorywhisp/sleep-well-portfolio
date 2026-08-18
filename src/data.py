@@ -30,6 +30,24 @@ TICKERS = {
     "IEAG.AS": "Euro bonds — iShares Core Euro Aggregate",
     "IBGL.AS": "Long govt bonds — iShares Euro Govt 15-30y",
     "4GLD.DE": "Gold — Xetra-Gold ETC",
+    "EQQQ.DE": "Nasdaq-100 — Invesco EQQQ",
+    "IPRP.AS": "EU property — iShares European Property",
+    "IUSN.DE": "World small caps — iShares MSCI World Small Cap",
+    "BTCE.DE": "Bitcoin — BTCetc Physical Bitcoin ETC",
+    "CL2.PA": "2x leveraged US equity — Amundi MSCI USA Lev 2x",
+}
+
+# MiFID-style appropriateness tiers: the knowledge/experience score decides
+# which products the app may recommend AT ALL. Risk appetite never unlocks
+# products — only knowledge does (and risk tolerance sets the target risk).
+TIERS = {
+    "Rookie": ["IWDA.AS", "EXSA.DE", "EMIM.AS", "IEAG.AS", "IBGL.AS",
+               "4GLD.DE"],
+    "Starter": ["IWDA.AS", "EXSA.DE", "EMIM.AS", "IEAG.AS", "IBGL.AS",
+                "4GLD.DE", "EQQQ.DE", "IPRP.AS", "IUSN.DE"],
+    "MVP": ["IWDA.AS", "EXSA.DE", "EMIM.AS", "IEAG.AS", "IBGL.AS",
+            "4GLD.DE", "EQQQ.DE", "IPRP.AS", "IUSN.DE", "BTCE.DE",
+            "CL2.PA"],
 }
 
 SNAPSHOT_PATH = Path(__file__).resolve().parent.parent / "data" / "snapshot.csv"
@@ -47,15 +65,25 @@ def clean_prices(raw: pd.DataFrame) -> pd.DataFrame:
     return prices.dropna()
 
 
-def download_prices(tickers: list[str], years: int = 10) -> pd.DataFrame:
-    """Download adjusted daily closes from Yahoo Finance and clean them."""
+def download_raw(tickers: list[str], years: int = 12) -> pd.DataFrame:
+    """Download adjusted daily closes from Yahoo Finance, uncleaned."""
     import yfinance as yf  # imported here so snapshot mode works offline
 
     raw = yf.download(tickers, period=f"{years}y", interval="1d",
                       auto_adjust=True, progress=False)["Close"]
     if raw.empty:
         raise RuntimeError("Yahoo Finance returned no data")
-    return clean_prices(raw[tickers])
+    return raw[tickers]
+
+
+def download_prices(tickers: list[str], years: int = 12) -> pd.DataFrame:
+    """Download and clean prices for one selected universe.
+
+    Cleaning happens per-universe, never across all known tickers: the
+    common-window rule must only consider the assets actually in play
+    (otherwise the youngest ticker would truncate everyone's history).
+    """
+    return clean_prices(download_raw(tickers, years))
 
 
 def load_snapshot(tickers: list[str] | None = None) -> pd.DataFrame:
@@ -79,8 +107,12 @@ def load_prices(tickers: list[str], years: int = 10) -> tuple[pd.DataFrame, str]
 
 
 def refresh_snapshot() -> None:
-    """Re-download all tickers and freeze them to data/snapshot.csv."""
-    prices = download_prices(list(TICKERS), years=12)
+    """Re-download all tickers and freeze them to data/snapshot.csv.
+
+    Stored RAW (full per-ticker history, NaN before listing) — cleaning is
+    applied at load time for whichever universe is selected.
+    """
+    prices = download_raw(list(TICKERS), years=12)
     SNAPSHOT_PATH.parent.mkdir(exist_ok=True)
     prices.to_csv(SNAPSHOT_PATH)
     print(f"snapshot written: {SNAPSHOT_PATH} "

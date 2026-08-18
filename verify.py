@@ -48,7 +48,7 @@ def main() -> int:
     max_dd = (wealth / peak - 1).min()
 
     recomputed = {"cagr": cagr, "vol": vol, "max_drawdown": max_dd}
-    lines = ["Independent verification — Sleep-Well Portfolio",
+    lines = ["Independent verification — Lakers Advisor",
              f"window: {start} -> {end}   assets: {', '.join(tickers)}",
              f"weights: {np.round(weights, 4).tolist()}", ""]
     ok = True

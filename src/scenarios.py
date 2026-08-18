@@ -32,6 +32,17 @@ STRESS_WINDOWS = {
 }
 
 
+def available(returns: pd.DataFrame, window_key: str) -> bool:
+    """A scenario can only be replayed if the data window covers it.
+
+    Higher product tiers include younger assets (Bitcoin ETC lists in
+    June 2020), which shortens the common window — the app tells the user
+    which crises fall outside it rather than hiding them.
+    """
+    spec = STRESS_WINDOWS[window_key]
+    return returns.index.min() <= pd.Timestamp(spec["start"])
+
+
 def replay(returns: pd.DataFrame, weights: np.ndarray,
            window_key: str) -> pd.Series:
     """Wealth curve of a portfolio through one stress window, starting at 1.

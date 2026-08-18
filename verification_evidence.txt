@@ -1,9 +1,9 @@
-Independent verification — Sleep-Well Portfolio
-window: 2014-08-18 -> 2026-08-17   assets: IWDA.AS, EXSA.DE, EMIM.AS, IEAG.AS, IBGL.AS, 4GLD.DE
-weights: [0.1469, 0.0273, 0.0448, 0.0595, 0.0456, 0.6758]
+Independent verification — Lakers Advisor
+window: 2020-06-08 -> 2026-08-18   assets: IWDA.AS, EXSA.DE, EMIM.AS, IEAG.AS, IBGL.AS, 4GLD.DE, EQQQ.DE, IPRP.AS, IUSN.DE, BTCE.DE, CL2.PA
+weights: [0.0987, 0.0116, 0.0437, 0.0105, 0.0413, 0.2179, 0.0317, 0.0159, 0.0313, 0.2002, 0.2971]
 
-cagr          app=+0.108921  recomputed=+0.108921  diff=0.00e+00  MATCH
-vol           app=+0.108363  recomputed=+0.108363  diff=1.39e-17  MATCH
-max_drawdown  app=-0.146360  recomputed=-0.146360  diff=0.00e+00  MATCH
+cagr          app=+0.239137  recomputed=+0.239137  diff=1.12e-09  MATCH
+vol           app=+0.199156  recomputed=+0.199156  diff=1.44e-09  MATCH
+max_drawdown  app=-0.320298  recomputed=-0.320298  diff=5.17e-09  MATCH
 
 RESULT: all values confirmed to 4 decimals
