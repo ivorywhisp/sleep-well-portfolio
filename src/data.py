@@ -41,13 +41,13 @@ TICKERS = {
 # which products the app may recommend AT ALL. Risk appetite never unlocks
 # products — only knowledge does (and risk tolerance sets the target risk).
 TIERS = {
-    "Rookie": ["IWDA.AS", "EXSA.DE", "EMIM.AS", "IEAG.AS", "IBGL.AS",
-               "4GLD.DE"],
-    "Starter": ["IWDA.AS", "EXSA.DE", "EMIM.AS", "IEAG.AS", "IBGL.AS",
-                "4GLD.DE", "EQQQ.DE", "IPRP.AS", "IUSN.DE"],
-    "MVP": ["IWDA.AS", "EXSA.DE", "EMIM.AS", "IEAG.AS", "IBGL.AS",
-            "4GLD.DE", "EQQQ.DE", "IPRP.AS", "IUSN.DE", "BTCE.DE",
-            "CL2.PA"],
+    "Beginner": ["IWDA.AS", "EXSA.DE", "EMIM.AS", "IEAG.AS", "IBGL.AS",
+                 "4GLD.DE"],
+    "Intermediate": ["IWDA.AS", "EXSA.DE", "EMIM.AS", "IEAG.AS", "IBGL.AS",
+                     "4GLD.DE", "EQQQ.DE", "IPRP.AS", "IUSN.DE"],
+    "Experienced": ["IWDA.AS", "EXSA.DE", "EMIM.AS", "IEAG.AS", "IBGL.AS",
+                    "4GLD.DE", "EQQQ.DE", "IPRP.AS", "IUSN.DE", "BTCE.DE",
+                    "CL2.PA"],
 }
 
 SNAPSHOT_PATH = Path(__file__).resolve().parent.parent / "data" / "snapshot.csv"

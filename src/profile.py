@@ -3,8 +3,9 @@
 The design mirrors what MiFID II requires of every EU broker/advisor:
 
 * An APPROPRIATENESS assessment (knowledge & experience) decides which
-  product tier the app may recommend at all — Rookie, Starter or MVP.
-  Risk appetite never unlocks products; only demonstrated knowledge does.
+  product tier the app may recommend at all — Beginner, Intermediate or
+  Experienced. Risk appetite never unlocks products; only demonstrated
+  knowledge does.
 * A SUITABILITY assessment (horizon, loss tolerance, capacity, goal)
   decides how much risk the recommendation should target, expressed as a
   maximum historical drawdown band.
@@ -90,10 +91,11 @@ QUESTIONS = {
     },
 }
 
-# knowledge score -> product tier (max score 6). Reaching MVP requires
-# BOTH hands-on experience with complex products AND passing the leverage
+# knowledge score -> product tier (max score 6). Reaching Experienced
+# requires BOTH hands-on use of complex products AND passing the leverage
 # concept check — neither alone is enough.
-TIER_BANDS = [(0, 2, "Rookie"), (3, 4, "Starter"), (5, 6, "MVP")]
+TIER_BANDS = [(0, 2, "Beginner"), (3, 4, "Intermediate"),
+              (5, 6, "Experienced")]
 
 # risk score -> (band name, max tolerable drawdown as positive fraction)
 RISK_BANDS = [
