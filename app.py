@@ -36,7 +36,11 @@ st.set_page_config(page_title="Sage Invest", page_icon="🌿",
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-html, body, [data-testid="stAppViewContainer"] * {
+/* :not(...) guards keep Streamlit's Material icon font intact — a bare *
+   selector turns every expander arrow into literal overlapping text */
+html, body,
+[data-testid="stAppViewContainer"]
+  *:not([data-testid="stIconMaterial"]):not(.material-symbols-rounded) {
     font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
 }
 h1, h2, h3 { font-weight: 700; letter-spacing: -0.02em; }
@@ -81,7 +85,9 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 
 QUIZ_CSS = """
 <style>
-.stButton > button {
+/* answer options only — primary buttons keep the theme's green/white,
+   otherwise 'See my portfolio' becomes white text on a white card */
+.stButton > button[kind="secondary"] {
     width: 100%;
     text-align: left;
     font-size: 1.06rem;
@@ -91,7 +97,9 @@ QUIZ_CSS = """
     border: 1px solid #F1EFE9;
     box-shadow: 0 1px 3px rgba(34,39,31,0.05);
 }
-.stButton > button:hover { border-color: #4F6547; color: #3C4F36; }
+.stButton > button[kind="secondary"]:hover {
+    border-color: #4F6547; color: #3C4F36;
+}
 </style>
 """
 
