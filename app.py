@@ -14,7 +14,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from src import data, metrics, portfolio, profile, projection
+from src import assistant, data, metrics, portfolio, profile, projection
 
 # design tokens, taken from the reference aesthetic: cream canvas, white
 # cards, sage greens, muted greys, soft red only for negatives
@@ -57,8 +57,9 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     padding: 0.55rem 1.3rem;
     border: 1px solid #E4E2DA;
 }
-[data-testid="stSidebar"], [data-testid="collapsedControl"] {
-    display: none;
+[data-testid="stSidebar"] {
+    background: #FFFFFF;
+    border-right: 1px solid #F1EFE9;
 }
 .sage-stat {
     background: #FFFFFF; border: 1px solid #F1EFE9; border-radius: 20px;
@@ -138,9 +139,25 @@ if "view" not in st.session_state:
     st.session_state.answers = {}
 
 
+def get_api_key() -> str | None:
+    """OpenAI key from Streamlit secrets; None hides the chat entirely."""
+    try:
+        return st.secrets["OPENAI_API_KEY"]
+    except Exception:
+        return None
+
+
+# the sidebar exists only as the AI chat on the results page; everywhere
+# else (and without a key) it stays hidden so the flow keeps zero chrome
+if not (st.session_state.view == "results" and get_api_key()):
+    st.markdown('<style>[data-testid="stSidebar"], '
+                '[data-testid="collapsedControl"] {display: none;}</style>',
+                unsafe_allow_html=True)
+
+
 def restart() -> None:
     for key in ("view", "q_index", "answers", "profile", "amount",
-                "override_tol"):
+                "override_tol", "chat"):
         st.session_state.pop(key, None)
     st.session_state.view = "welcome"
     st.session_state.q_index = 0
@@ -283,6 +300,16 @@ else:
     returns = metrics.daily_returns(prices)
     window = (str(prices.index.min().date()),
               str(prices.index.max().date()))
+    coverage_years = len(returns) / metrics.TRADING_DAYS
+    if coverage_years < 8:
+        st.warning(
+            f"**Data coverage:** the youngest fund in your {prof.tier} "
+            f"universe only trades since {window[0]}, so every number "
+            f"below is tested on {coverage_years:.0f} years of history — "
+            f"a window that excludes the 2020 COVID crash and 2008. "
+            f"Short windows flatter risky assets; treat a "
+            f"'within your limit' verdict with extra skepticism."
+        )
 
     if "override_tol" not in st.session_state:
         st.session_state.override_tol = int(prof.tolerance * 100)
@@ -320,7 +347,6 @@ else:
     best_port = metrics.portfolio_returns(returns, best_weights)
     ew_weights = np.full(len(tickers), 1 / len(tickers))
     ew_port = metrics.portfolio_returns(returns, ew_weights)
-    portfolio.save_recommendation(best, list(tickers), window, tolerance)
 
     # ------------------------------------------------------- verdict cards
     recovery = metrics.recovery_days(best_port)
@@ -335,8 +361,9 @@ else:
                           else "limit missed", positive=not missed),
                 unsafe_allow_html=True)
     c3.markdown(stat_card("Recovery",
-                          f"{recovery} days" if recovery else "ongoing",
-                          "from the deepest fall",
+                          f"{recovery}" if recovery else "ongoing",
+                          "trading days to recover" if recovery
+                          else "not yet back at peak",
                           positive=recovery is not None),
                 unsafe_allow_html=True)
     c4.markdown(stat_card(f"€{amount:,.0f} became", f"€{grown:,.0f}",
@@ -375,6 +402,9 @@ else:
                 f"**{ew['max_drawdown']:.1%}** at its worst — beyond your "
                 f"limit. For your profile it is not a safe default."
             )
+        st.caption("**When to rebalance:** once a year, or when any fund "
+                   "drifts more than 5 points from target — rebalancing "
+                   "more often has historically added costs, not safety.")
     with right, st.container(border=True):
         st.subheader("The falls you'd have lived through")
         dd_best = (metrics.wealth_curve(best_port)
@@ -455,7 +485,9 @@ else:
                              color_discrete_map={True: GREEN_SOFT,
                                                  False: FAINT},
                              labels={"vol": "Annualized volatility",
-                                     "cagr": "CAGR"},
+                                     "cagr": "CAGR",
+                                     "sharpe": "Sharpe"},
+                             hover_data={"sharpe": ":.2f"},
                              opacity=0.45, render_mode="webgl")
             fig.add_scatter(x=[ew["vol"]], y=[ew["cagr"]],
                             mode="markers+text",
@@ -494,8 +526,11 @@ else:
                 f"**Limitations** — past drawdowns underestimate future "
                 f"ones (no 2008 in this window); costs and taxes "
                 f"excluded; rebalancing to constant weights assumed; "
-                f"projection reshuffles the past, it cannot imagine new "
-                f"crises.\n\n"
+                f"picking the best of 10,000 candidates is in-sample "
+                f"selection on one realized history; the projection "
+                f"resamples days independently (no volatility "
+                f"clustering), which understates long-tail risk, and it "
+                f"cannot imagine new kinds of crisis.\n\n"
                 f"**Verification** — `verify.py` recomputes the "
                 f"recommendation's return, volatility and worst fall "
                 f"from raw data with fully independent code; agreement "
@@ -509,9 +544,10 @@ else:
             sk_cagr = metrics.cagr(sk_port)
             sk_dd = metrics.max_drawdown(sk_port)
             st.markdown(
-                f"skfolio's `MeanRisk` solves the same problem exactly — "
-                f"maximize return with your loss limit and the "
-                f"{MAX_WEIGHT:.0%} cap as constraints. It lands at "
+                f"skfolio's `MeanRisk` solves a convex relaxation of the "
+                f"same problem (its drawdown constraint is measured on "
+                f"non-compounded wealth) — maximize return under your "
+                f"loss limit and the {MAX_WEIGHT:.0%} cap. It lands at "
                 f"**{sk_cagr:.1%}/yr** with a worst fall of "
                 f"**{sk_dd:.1%}** (measured with our own compounded "
                 f"metrics), vs our sampled **{best['cagr']:.1%}/yr**. "
@@ -545,3 +581,57 @@ else:
     st.caption("Data: Yahoo Finance daily adjusted closes, EUR-listed "
                "UCITS ETFs/ETCs. Educational project — not investment "
                "advice.")
+
+    # ---------------------------------------------------- AI chat (sidebar)
+    # the brief's optional LLM feature, kept genuinely useful: grounded on
+    # THIS user's profile and numbers, so it explains their own result
+    api_key = get_api_key()
+    if api_key:
+        top3 = alloc.head(3)
+        chat_context = (
+            f"Knowledge tier: {prof.tier} (score "
+            f"{prof.knowledge_score}/6). Risk band: {prof.band} — max "
+            f"tolerable drawdown -{tolerance:.0%}"
+            + (", capped to Cautious by a <3y horizon"
+               if prof.capped else "") + ". "
+            f"Horizon: ~{prof.horizon_years} years. Amount: €{amount:,.0f}. "
+            f"Data window: {window[0]} to {window[1]} (Yahoo Finance, EUR "
+            f"UCITS funds). Recommended portfolio: "
+            + "; ".join(f"{r.Fund} {r.Weight:.0%}"
+                        for r in top3.itertuples()) + " (top 3 of "
+            f"{len(tickers)}; max 40% per fund). Historical CAGR "
+            f"{best['cagr']:.1%}/yr, worst drawdown "
+            f"{best['max_drawdown']:.1%}"
+            + (f", recovered in {recovery} trading days" if recovery
+               else "") + ". "
+            f"Equal-weight benchmark: CAGR {ew['cagr']:.1%}, worst "
+            f"drawdown {ew['max_drawdown']:.1%}. Bootstrap projection of "
+            f"€{amount:,.0f} over {prof.horizon_years}y: median "
+            f"€{end['p50']:,.0f}, 5th percentile €{end['p5']:,.0f}. "
+            f"Method: 10,000 random long-only allocations filtered by the "
+            f"drawdown limit; best CAGR survivor; skfolio convex optimizer "
+            f"as cross-check. Rebalancing guidance: yearly or on 5-point "
+            f"drift."
+        )
+        with st.sidebar:
+            st.markdown("### 💬 Ask Sage")
+            st.caption("Questions about your result? Sage knows your "
+                       "profile and portfolio. Educational, not advice.")
+            if "chat" not in st.session_state:
+                st.session_state.chat = []
+            for msg in st.session_state.chat:
+                with st.chat_message(msg["role"]):
+                    st.markdown(msg["content"])
+            if question := st.chat_input("e.g. Why so much gold?"):
+                st.session_state.chat.append(
+                    {"role": "user", "content": question})
+                try:
+                    answer = assistant.reply(api_key, chat_context,
+                                             st.session_state.chat)
+                except Exception:
+                    answer = ("Sorry — the assistant is unavailable right "
+                              "now. Everything else in the app works "
+                              "without it.")
+                st.session_state.chat.append(
+                    {"role": "assistant", "content": answer})
+                st.rerun()

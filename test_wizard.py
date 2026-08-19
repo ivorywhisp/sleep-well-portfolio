@@ -26,6 +26,17 @@ ANSWERS_BEGINNER = [
     "Around half",
     "Growing steadily over time",
 ]
+# short horizon caps to Cautious (-10%), which no all-growth universe
+# satisfies over 12 years -> exercises the infeasible "straight talk" path
+ANSWERS_EDGE_CASE = [
+    "Nothing yet — this would be my first investment",
+    "10%",
+    "I haven't started / under 1 year",
+    "Within 3 years",
+    "Buy more while it's cheap",
+    "A small part — I have a solid cushion",
+    "Maximizing long-term growth",
+]
 
 
 def click(at: AppTest, label_part: str, timeout: int = 60) -> None:
@@ -34,7 +45,8 @@ def click(at: AppTest, label_part: str, timeout: int = 60) -> None:
     at.run(timeout=timeout)
 
 
-def run_flow(answers: list[str], expect_tier: str) -> None:
+def run_flow(answers: list[str], expect_tier: str,
+             expect_infeasible: bool = False) -> None:
     at = AppTest.from_file("app.py")
     at.run(timeout=60)
     assert not at.exception, at.exception
@@ -49,11 +61,20 @@ def run_flow(answers: list[str], expect_tier: str) -> None:
 
     prof = at.session_state["profile"]
     assert prof.tier == expect_tier, f"{prof.tier} != {expect_tier}"
+
+    warnings = " | ".join(w.value for w in at.warning)
+    if expect_infeasible:
+        assert prof.capped, "horizon cap should have fired"
+        assert "Straight talk" in warnings, (
+            f"expected the infeasible-tolerance warning, got: {warnings}")
     print(f"OK {expect_tier}: band={prof.band} tol={prof.tolerance} "
-          f"horizon={prof.horizon_years}y")
+          f"horizon={prof.horizon_years}y"
+          + (" [edge case: infeasible handled]" if expect_infeasible
+             else ""))
 
 
 if __name__ == "__main__":
     run_flow(ANSWERS_EXPERIENCED, "Experienced")
     run_flow(ANSWERS_BEGINNER, "Beginner")
+    run_flow(ANSWERS_EDGE_CASE, "Beginner", expect_infeasible=True)
     print("tap-through flow: PASS")

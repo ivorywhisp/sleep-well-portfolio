@@ -129,6 +129,16 @@ def score_answers(answers: dict[str, int]) -> Profile:
                for k in QUESTIONS if QUESTIONS[k]["dimension"] == "risk")
 
     tier = next(name for lo, hi, name in TIER_BANDS if lo <= knowledge <= hi)
+    # Hard appropriateness gate: the Experienced tier (crypto ETC, 2x
+    # leverage) requires BOTH hands-on use of complex products AND a
+    # correct leverage answer — a high score assembled any other way
+    # (e.g. stocks + tenure) must not unlock products never traded.
+    if tier == "Experienced":
+        used_complex = answers["products"] == 3
+        passed_check = QUESTIONS["leverage_check"]["options"][
+            answers["leverage_check"]][1] > 0
+        if not (used_complex and passed_check):
+            tier = "Intermediate"
     band, tolerance = next((name, tol) for lo, hi, name, tol in RISK_BANDS
                            if lo <= risk <= hi)
 

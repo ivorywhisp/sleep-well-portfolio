@@ -1,1 +1,2 @@
-"""Sleep-Well Portfolio — analysis package (data, metrics, portfolio, scenarios)."""
+"""Sage Invest — analysis package (data, metrics, portfolio, profile,
+projection, crosscheck, assistant)."""

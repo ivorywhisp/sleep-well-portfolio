@@ -3,10 +3,10 @@
 Provenance
 ----------
 Provider: Yahoo Finance daily adjusted close via the `yfinance` library.
-Instruments: six UCITS ETFs / ETCs listed on Euronext Amsterdam and Xetra,
-all quoted in EUR, chosen to span the asset classes a European retail
-investor can actually buy. Retrieved on demand; `data/snapshot.csv` is a
-frozen copy (see `refresh_snapshot`) used as an offline fallback and as the
+Instruments: eleven UCITS ETFs / ETCs listed on Euronext Amsterdam, Xetra
+and Euronext Paris, all quoted in EUR, grouped into three knowledge tiers
+(see TIERS). Retrieved on demand; `data/snapshot.csv` is a frozen copy
+(see `refresh_snapshot`) used as an offline fallback and as the
 deterministic input for independent verification.
 
 Cleaning policy (documented for the "trustworthy pipeline" requirement)
@@ -16,7 +16,8 @@ Cleaning policy (documented for the "trustworthy pipeline" requirement)
 2. Forward-fill gaps of up to 3 trading days. These gaps are national
    exchange holidays (e.g. German exchanges closed while Amsterdam trades);
    carrying the last price forward is the standard treatment.
-3. Longer gaps are left as NaN and reported, never silently filled.
+3. Dates with longer gaps are DROPPED from the analysis window (the final
+   `.dropna()` below) — prices are never invented to bridge them.
 """
 
 from pathlib import Path
@@ -94,7 +95,8 @@ def load_snapshot(tickers: list[str] | None = None) -> pd.DataFrame:
     return prices
 
 
-def load_prices(tickers: list[str], years: int = 10) -> tuple[pd.DataFrame, str]:
+def load_prices(tickers: list[str],
+                years: int = 12) -> tuple[pd.DataFrame, str]:
     """Return (prices, source). Tries a live download, falls back to snapshot.
 
     The source flag lets the app show a visible banner when running on

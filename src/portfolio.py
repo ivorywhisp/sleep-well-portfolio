@@ -3,11 +3,15 @@ investor's drawdown tolerance, recommend the best survivor.
 
 Why random sampling instead of an optimizer?
 --------------------------------------------
-A maximum-drawdown constraint is non-convex, so classical mean-variance
-solvers do not apply directly. With only 4-6 assets, sampling ~10,000
-random allocations covers the space densely, is fully transparent (every
-candidate can be inspected), and lets us show the whole feasible region to
-the user instead of a single black-box answer.
+A maximum-drawdown constraint on compounded wealth is non-convex, so
+classical mean-variance solvers do not apply directly. Sampling ~10,000
+random allocations is fully transparent (every candidate can be
+inspected) and lets us show the user the whole feasible region instead
+of a single black-box answer. Honest caveats: at 11 assets the sample is
+sparse relative to the simplex, and picking the max-CAGR survivor is
+in-sample selection on one realized history — both are disclosed in the
+app, and a convex-optimizer cross-check (skfolio, src/crosscheck.py)
+bounds how much return the sampling leaves on the table.
 """
 
 import json
