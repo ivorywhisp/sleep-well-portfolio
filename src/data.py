@@ -56,14 +56,26 @@ MAX_FFILL_DAYS = 3
 
 
 def clean_prices(raw: pd.DataFrame) -> pd.DataFrame:
-    """Apply the documented cleaning policy to raw close prices."""
+    """Apply the documented cleaning policy to raw close prices.
+
+    Inspection evidence travels with the result in DataFrame.attrs:
+    `ffilled_cells` (holiday gaps carried forward) and `dropped_rows`
+    (dates removed because a gap exceeded MAX_FFILL_DAYS) — the app
+    surfaces both so the cleaning policy is evidenced, not asserted.
+    """
     prices = raw.copy()
     prices.index = pd.to_datetime(prices.index).tz_localize(None)
     # common window: start where every asset has traded at least once
     first_valid = prices.apply(lambda col: col.first_valid_index()).max()
     prices = prices.loc[first_valid:]
+    missing_before = int(prices.isna().sum().sum())
     prices = prices.ffill(limit=MAX_FFILL_DAYS)
-    return prices.dropna()
+    missing_after = int(prices.isna().sum().sum())
+    rows_before = len(prices)
+    prices = prices.dropna()
+    prices.attrs["ffilled_cells"] = missing_before - missing_after
+    prices.attrs["dropped_rows"] = rows_before - len(prices)
+    return prices
 
 
 def download_raw(tickers: list[str], years: int = 12) -> pd.DataFrame:

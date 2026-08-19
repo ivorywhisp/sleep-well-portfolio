@@ -30,8 +30,10 @@ RED_TINT = "#F6E4E2"
 TIER_EMOJI = {"Beginner": "🌱", "Intermediate": "🌿", "Experienced": "🌳"}
 MAX_WEIGHT = 0.40  # concentration guardrail (see help text on fine-tune)
 
+# sidebar starts expanded: it only ever exists as the AI chat on the
+# results page (CSS hides it elsewhere), and a collapsed chat is invisible
 st.set_page_config(page_title="Sage Invest", page_icon="🌿",
-                   layout="wide", initial_sidebar_state="collapsed")
+                   layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
 <style>
@@ -203,6 +205,35 @@ def cached_second_opinion(tickers: tuple[str, ...], window_end: str,
     return crosscheck.second_opinion(returns, tol_pct / 100, MAX_WEIGHT)
 
 
+@st.cache_data(show_spinner="Running the out-of-sample check…")
+def cached_oos_check(tickers: tuple[str, ...], window_end: str,
+                     tol_pct: int) -> dict | None:
+    """Split-sample robustness: select on the first half of history only,
+    then measure that pick on the unseen second half. Answers the
+    strongest objection to in-sample selection with a measurement."""
+    prices, _ = cached_prices(tickers)
+    returns = metrics.daily_returns(prices)
+    half = len(returns) // 2
+    first, second = returns.iloc[:half], returns.iloc[half:]
+    weights = portfolio.sample_weights(len(tickers))
+    tbl = portfolio.portfolio_table(first, weights)
+    cols = [f"w_{t}" for t in tickers]
+    tbl = tbl[tbl[cols].max(axis=1) <= MAX_WEIGHT]
+    rec = portfolio.recommend(tbl, tol_pct / 100)
+    if not rec["feasible"]:
+        return None
+    w = np.array([rec["row"][c] for c in cols])
+    in_port = metrics.portfolio_returns(first, w)
+    out_port = metrics.portfolio_returns(second, w)
+    return {
+        "split": str(second.index.min().date()),
+        "in_cagr": metrics.cagr(in_port),
+        "in_dd": metrics.max_drawdown(in_port),
+        "out_cagr": metrics.cagr(out_port),
+        "out_dd": metrics.max_drawdown(out_port),
+    }
+
+
 # =============================================================== ① welcome
 if st.session_state.view == "welcome":
     st.markdown('<div class="sage-hero">Hi 👋<br>Welcome to the future '
@@ -302,11 +333,15 @@ else:
               str(prices.index.max().date()))
     coverage_years = len(returns) / metrics.TRADING_DAYS
     if coverage_years < 8:
+        # name only the crises this window actually misses
+        excluded = ["the 2008 financial crisis"]
+        if pd.Timestamp(window[0]) > pd.Timestamp("2020-02-19"):
+            excluded.insert(0, "the 2020 COVID crash")
         st.warning(
             f"**Data coverage:** the youngest fund in your {prof.tier} "
             f"universe only trades since {window[0]}, so every number "
             f"below is tested on {coverage_years:.0f} years of history — "
-            f"a window that excludes the 2020 COVID crash and 2008. "
+            f"a window that excludes {' and '.join(excluded)}. "
             f"Short windows flatter risky assets; treat a "
             f"'within your limit' verdict with extra skepticism."
         )
@@ -522,7 +557,10 @@ else:
                 f"({source} mode); common window starts {window[0]}, "
                 f"the first date every asset in your tier trades; "
                 f"exchange-holiday gaps forward-filled up to 3 days; "
-                f"longer gaps dropped, never invented.\n\n"
+                f"longer gaps dropped, never invented. In this universe: "
+                f"**{prices.attrs.get('ffilled_cells', 0)} holiday cells "
+                f"forward-filled, {prices.attrs.get('dropped_rows', 0)} "
+                f"dates dropped**.\n\n"
                 f"**Limitations** — past drawdowns underestimate future "
                 f"ones (no 2008 in this window); costs and taxes "
                 f"excluded; rebalancing to constant weights assumed; "
@@ -536,6 +574,25 @@ else:
                 f"from raw data with fully independent code; agreement "
                 f"to 4 decimals is required."
             )
+            oos = cached_oos_check(tickers, window[1], tol_pct)
+            if oos:
+                st.markdown(
+                    f"**Out-of-sample check** — selecting the same way "
+                    f"on the first half of history only, then measuring "
+                    f"that pick on the unseen half (from {oos['split']}): "
+                    f"in-sample {oos['in_cagr']:.1%}/yr (worst "
+                    f"{oos['in_dd']:.1%}) became **{oos['out_cagr']:.1%}"
+                    f"/yr (worst {oos['out_dd']:.1%})** out-of-sample. "
+                    f"That gap is what in-sample selection costs — shown, "
+                    f"not hidden."
+                )
+            else:
+                st.markdown(
+                    "**Out-of-sample check** — on the first half of "
+                    "history alone, no allocation met your limit, so the "
+                    "split-sample check has nothing to select. Loosen "
+                    "the tolerance in Fine-tune to see it."
+                )
         st.markdown("**Second opinion — skfolio (convex optimizer, "
                     "seen in class)**")
         try:

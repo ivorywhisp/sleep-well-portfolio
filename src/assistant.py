@@ -7,8 +7,6 @@ app simply hides the chat, so forks and graders without credentials
 lose nothing.
 """
 
-from openai import OpenAI
-
 # fast non-reasoning model first: reasoning models can spend the whole
 # completion budget thinking and return empty content in a chat widget
 MODELS = ["gpt-4o-mini", "gpt-5-mini"]
@@ -32,6 +30,9 @@ User context:
 def reply(api_key: str, context: str, history: list[dict]) -> str:
     """One assistant turn. `history` is [{role, content}, ...] ending with
     the user's newest message."""
+    # deferred import: a keyless deployment never needs the openai package
+    from openai import OpenAI
+
     client = OpenAI(api_key=api_key)
     messages = ([{"role": "system",
                   "content": SYSTEM.format(context=context)}] + history)

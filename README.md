@@ -20,7 +20,7 @@ Sage Invest answers it the way EU regulation (MiFID II) obliges real advisors to
 3. Keep the allocations whose worst historical episode stayed inside the user's limit; recommend the highest-CAGR survivor.
 4. Always benchmarked against **equal-weight (1/N)** — judged by the same drawdown test, so the comparison is informative, not ceremonial.
 5. A **bootstrap Monte Carlo** (2,000 resampled futures of the portfolio's own daily returns) projects the outcome range to the user's horizon, with an explicit extrapolation warning when the horizon exceeds the data window.
-6. Cross-check: **skfolio**'s `MeanRisk` convex optimizer solves the same constrained problem exactly; its answer is compared to ours in the Evidence panel.
+6. Cross-check: **skfolio**'s `MeanRisk` optimizer solves a convex relaxation of the same constrained problem (its drawdown constraint is measured on non-compounded wealth); its answer is compared to ours in the Evidence panel.
 
 Why sampling instead of only an optimizer: a max-drawdown constraint is non-convex; sampling is transparent, shows the user the whole feasible landscape, and avoids presenting corner solutions (everything piled at the caps) as advice. The optimizer remains as an independent check.
 
