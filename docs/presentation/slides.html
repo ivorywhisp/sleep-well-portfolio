@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sage Invest, Team Lakers</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@page { size: 1280px 720px; margin: 0; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif; color: #22271F; }
+section {
+  width: 1280px; height: 720px; background: #EAE8E1;
+  page-break-after: always; position: relative;
+  padding: 64px 78px 80px;
+}
+h1 { font-size: 64px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.08; }
+h2 { font-size: 40px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 30px; }
+p  { font-size: 19px; line-height: 1.5; }
+.sub { color: #8B9086; font-size: 22px; margin-top: 18px; max-width: 760px; }
+.card {
+  background: #FFFFFF; border: 1px solid #F1EFE9; border-radius: 20px;
+  padding: 26px 30px; box-shadow: 0 1px 3px rgba(34,39,31,0.05);
+}
+.card.dark { background: #5C6E54; color: #FFFFFF; border: none; }
+.card.dark .label { color: #DCE4D6; }
+.card.dark p { color: #ECF0E8; }
+.label { font-size: 14px; font-weight: 700; color: #8B9086; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+.big { font-size: 34px; font-weight: 800; line-height: 1.15; }
+.row { display: flex; gap: 22px; }
+.row > * { flex: 1; }
+.pill {
+  display: inline-block; border-radius: 999px; padding: 4px 14px;
+  font-size: 15px; font-weight: 700; background: #E7EDE2; color: #4F6547;
+  margin-right: 8px;
+}
+.pill.red { background: #F6E4E2; color: #B8544B; }
+.pill.dark { background: rgba(255,255,255,0.18); color: #FFFFFF; }
+.footer {
+  position: absolute; bottom: 28px; left: 78px; right: 78px;
+  display: flex; justify-content: space-between;
+  font-size: 13px; color: #8B9086; font-weight: 600;
+}
+.url { color: #4F6547; font-weight: 800; }
+.green { color: #4F6547; }
+.red { color: #B8544B; }
+.step {
+  background: #FFFFFF; border: 1px solid #F1EFE9; border-radius: 20px;
+  padding: 22px 24px; box-shadow: 0 1px 3px rgba(34,39,31,0.05);
+  display: flex; gap: 16px; align-items: flex-start;
+}
+.stepnum {
+  min-width: 40px; height: 40px; border-radius: 12px; background: #4F6547;
+  color: #FFF; font-weight: 800; font-size: 20px;
+  display: flex; align-items: center; justify-content: center;
+}
+table { width: 100%; border-collapse: collapse; font-size: 19px; }
+th { text-align: left; color: #8B9086; font-size: 14px; text-transform: uppercase; letter-spacing: 0.06em; padding: 10px 14px; border-bottom: 1px solid #F1EFE9; }
+td { padding: 12px 14px; border-bottom: 1px solid #F6F4EE; font-weight: 600; }
+.q { font-size: 26px; font-weight: 800; color: #3C4F36; }
+</style>
+</head>
+<body>
+
+<!-- 1 · title -->
+<section>
+  <div style="margin-top:130px;">
+    <div style="font-size:30px; font-weight:800; color:#4F6547; margin-bottom:18px;">🌿 Sage Invest</div>
+    <h1>Invest at the level<br>you're ready for.</h1>
+    <p class="sub">A robo advisor that checks what you understand and what losses you can survive before it recommends anything.</p>
+  </div>
+  <div style="position:absolute; bottom:120px; left:78px;">
+    <span class="pill">Team Lakers</span>
+    <span style="font-size:17px; color:#8B9086; font-weight:600;">Daniel Gallinas · Martin Christian Herisson · Vasileios Konstantakopoulos · Greta Allison Perbellini</span>
+  </div>
+  <div style="position:absolute; bottom:80px; left:78px; font-size:20px;" class="url">lakersteam.streamlit.app</div>
+  <div class="footer"><span>Python for Finance · IENYC · August 2026</span><span>1</span></div>
+</section>
+
+<!-- 2 · problem -->
+<section>
+  <h2>People do not fail at picking funds.<br>They fail at holding them.</h2>
+  <div class="row" style="margin-top:40px;">
+    <div class="card">
+      <div class="label">The behavior problem</div>
+      <p class="big" style="font-size:26px;">Panic selling</p>
+      <p style="margin-top:12px; color:#5a5f56;">When losses pass what an investor can truly tolerate, they sell at the bottom and lock in the damage. The real risk is not volatility. It is the fall that makes you quit.</p>
+    </div>
+    <div class="card">
+      <div class="label">The industry problem</div>
+      <p class="big" style="font-size:26px;">Complexity on demand</p>
+      <p style="margin-top:12px; color:#5a5f56;">Modern investing apps hand leveraged products and crypto to anyone who taps a button, whether or not they understand what a 2x fund does on a bad day.</p>
+    </div>
+    <div class="card dark">
+      <div class="label">The result</div>
+      <p class="big" style="font-size:26px;">Portfolios people abandon</p>
+      <p style="margin-top:12px;">Good funds, wrong owner. Sage Invest exists to match the portfolio to the person, with evidence.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Sage Invest · Team Lakers</span><span>2</span></div>
+</section>
+
+<!-- 3 · user + decision -->
+<section>
+  <h2>Our user, and the one decision the app answers</h2>
+  <div class="card" style="margin-top:30px; padding:40px;">
+    <div class="label">The user</div>
+    <p style="font-size:24px; font-weight:700;">A European retail investor opening their first, or next, investment account.</p>
+  </div>
+  <div class="card dark" style="margin-top:24px; padding:40px;">
+    <div class="label">The decision</div>
+    <p style="font-size:30px; font-weight:800; line-height:1.3;">"Which portfolio should I buy, given what I actually understand and what losses I can actually sit through?"</p>
+  </div>
+  <p class="sub" style="margin-top:28px;">Every screen, chart and number in the app serves this single decision. Nothing decorative survived.</p>
+  <div class="footer"><span>Sage Invest · Team Lakers</span><span>3</span></div>
+</section>
+
+<!-- 4 · the idea -->
+<section>
+  <h2>Two scores, kept separate, like real advisors must</h2>
+  <div class="row" style="margin-top:34px;">
+    <div class="card" style="padding:34px;">
+      <div class="label">Appropriateness · what you may buy</div>
+      <p style="color:#5a5f56; margin-bottom:18px;">Three knowledge and experience questions gate the product universe. Appetite never unlocks products; understanding does.</p>
+      <p style="margin-bottom:10px;"><span class="pill">🌱 Beginner</span> 6 broad index funds</p>
+      <p style="margin-bottom:10px;"><span class="pill">🌿 Intermediate</span> + Nasdaq 100, property, small caps</p>
+      <p><span class="pill">🌳 Experienced</span> + Bitcoin ETC, 2x leveraged fund</p>
+    </div>
+    <div class="card" style="padding:34px;">
+      <div class="label">Suitability · how much risk fits you</div>
+      <p style="color:#5a5f56; margin-bottom:18px;">Four questions on horizon, losses, capacity and goal set your loss limit: the worst fall you could hold through without selling.</p>
+      <p style="margin-bottom:10px;"><span class="pill">Cautious −10%</span> <span class="pill">Balanced −15%</span></p>
+      <p style="margin-bottom:18px;"><span class="pill">Growth −25%</span> <span class="pill red">Aggressive −35%</span></p>
+      <p style="font-weight:700; color:#3C4F36;">Money needed within 3 years is capped at Cautious, however brave the answers.</p>
+    </div>
+  </div>
+  <p class="sub" style="margin-top:26px;">This mirrors MiFID II, the EU rule every real broker follows. We made the regulation the product.</p>
+  <div class="footer"><span>Sage Invest · Team Lakers</span><span>4</span></div>
+</section>
+
+<!-- 5 · demo bridge -->
+<section>
+  <div style="display:flex; gap:60px; align-items:center; height:540px;">
+    <div style="flex:1.4;">
+      <h2>Try it while we talk</h2>
+      <p style="font-size:26px; font-weight:800;" class="url">lakersteam.streamlit.app</p>
+      <p class="sub" style="margin-top:22px;">Seven questions, two minutes, then your portfolio with the evidence behind it. Live on Streamlit Community Cloud.</p>
+      <p style="margin-top:26px; color:#8B9086; font-size:16px;">If the room wifi dies, we demo from the fallback captures in the repo.</p>
+    </div>
+    <div class="card" style="flex:0.8; text-align:center; padding:36px;">
+      <img src="data:image/png;base64,QR_PLACEHOLDER" style="width:280px; height:280px;" alt="QR to the live app">
+      <p style="font-weight:700; color:#4F6547; margin-top:10px;">Scan to open the app</p>
+    </div>
+  </div>
+  <div class="footer"><span>Sage Invest · Team Lakers</span><span>5</span></div>
+</section>
+
+<!-- 6 · engine -->
+<section>
+  <h2>The engine: transparent by design</h2>
+  <div style="display:flex; flex-direction:column; gap:16px; margin-top:30px;">
+    <div class="step"><div class="stepnum">1</div><p><b>10,000 candidate allocations.</b> Random, long only, at most 40% in any single fund, drawn over the user's unlocked universe.</p></div>
+    <div class="step"><div class="stepnum">2</div><p><b>The sleep test.</b> Keep only the allocations whose worst fall in 12 years of real history stayed inside the user's loss limit, through COVID and the 2022 bond crash.</p></div>
+    <div class="step"><div class="stepnum">3</div><p><b>Best survivor wins.</b> Among portfolios the user could have held, recommend the one that made the most money.</p></div>
+    <div class="step"><div class="stepnum">4</div><p><b>Always benchmarked.</b> Splitting money equally is judged by the same test. Sometimes it passes; for many profiles it falls beyond their limit, and the app says so.</p></div>
+  </div>
+  <p class="sub" style="margin-top:18px; font-size:17px; max-width:1050px;">Why sampling and not only an optimizer: a drawdown cap is not a convex constraint, and sampling shows the whole feasible landscape. A convex optimizer (skfolio) runs as an independent check.</p>
+  <div class="footer"><span>Sage Invest · Team Lakers</span><span>6</span></div>
+</section>
+
+<!-- 7 · evidence -->
+<section>
+  <h2>Evidence, not vibes</h2>
+  <div class="row" style="margin-top:30px;">
+    <div class="card">
+      <div class="label">Recommended (Beginner, −15% limit)</div>
+      <p class="big green">8.4% per year</p>
+      <p style="margin-top:8px;">Worst episode <b>−14.6%</b> <span class="pill">within the limit</span></p>
+    </div>
+    <div class="card">
+      <div class="label">Splitting equally (1/N)</div>
+      <p class="big">7.3% per year</p>
+      <p style="margin-top:8px;">Worst episode <b class="red">−20.6%</b> <span class="pill red">beyond the limit</span></p>
+    </div>
+    <div class="card dark">
+      <div class="label">€50,000 became</div>
+      <p class="big">€188,759</p>
+      <p style="margin-top:8px;">2014 to 2026, twelve years of daily data</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:24px; padding:30px;">
+    <div class="label">We tested our own honesty</div>
+    <p>Choosing the portfolio on the first six years only, the pick delivered <b>8.7% per year</b> in sample but <b class="red">6.5% per year</b> on the unseen half, with a worst fall of <b class="red">−17.4%</b>, past the limit. That gap is what picking winners on history costs. The app shows it to every user instead of hiding it.</p>
+  </div>
+  <div class="footer"><span>Sage Invest · Team Lakers</span><span>7</span></div>
+</section>
+
+<!-- 8 · verification -->
+<section>
+  <h2>Trust, but verify. Then verify again.</h2>
+  <div class="row" style="margin-top:34px;">
+    <div class="card">
+      <div class="label">Independent recomputation</div>
+      <p style="font-weight:700; margin-bottom:10px;">verify.py</p>
+      <p style="color:#5a5f56;">Recomputes return, volatility and worst fall from raw prices with code that imports nothing from the app. Agreement to 4 decimals required. During development it caught a real windowing bug. That is why it exists.</p>
+    </div>
+    <div class="card">
+      <div class="label">Automated end to end tests</div>
+      <p style="font-weight:700; margin-bottom:10px;">test_wizard.py</p>
+      <p style="color:#5a5f56;">Drives the full app headlessly for three personas, including the edge case where no portfolio can meet the limit and the app must explain instead of crash.</p>
+    </div>
+    <div class="card">
+      <div class="label">Second opinion</div>
+      <p style="font-weight:700; margin-bottom:10px;">skfolio cross check</p>
+      <p style="color:#5a5f56;">A convex optimizer solves a relaxation of the same problem. At low risk it lands where we land, validating the sampling. At high risk it piles funds at their caps, exactly the corner solutions we chose not to present as advice.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Sage Invest · Team Lakers</span><span>8</span></div>
+</section>
+
+<!-- 9 · data -->
+<section>
+  <h2>Data you can audit</h2>
+  <div class="row" style="margin-top:34px;">
+    <div class="card">
+      <div class="label">Provenance</div>
+      <p style="color:#5a5f56;">Yahoo Finance daily adjusted closes for 11 EUR listed UCITS funds on Euronext Amsterdam and Xetra. Retrieved live each session; a frozen snapshot ships with the repo as fallback and as the deterministic input for verification.</p>
+    </div>
+    <div class="card">
+      <div class="label">Cleaning, evidenced</div>
+      <p style="color:#5a5f56;">Common window per universe. Exchange holiday gaps carried forward up to 3 days; longer gaps dropped, never invented. The app displays the exact counts: cells filled and dates dropped for your universe.</p>
+    </div>
+    <div class="card">
+      <div class="label">Coverage, disclosed</div>
+      <p style="color:#5a5f56;">The riskiest tier only has data since June 2020, a window that never saw the COVID crash. The app warns that user in plain words rather than letting a short window flatter risky assets.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Sage Invest · Team Lakers</span><span>9</span></div>
+</section>
+
+<!-- 10 · limitations + AI -->
+<section>
+  <h2>What we would not let you miss</h2>
+  <div class="row" style="margin-top:30px;">
+    <div class="card" style="padding:32px;">
+      <div class="label">Honest limitations</div>
+      <p style="color:#5a5f56; line-height:1.7;">Past drawdowns understate the future: this window holds no 2008. Costs and taxes are excluded. Picking the best of 10,000 is selection on one history, and we measure that cost out of sample. The projection reshuffles the past; it cannot imagine a new kind of crisis.</p>
+    </div>
+    <div class="card" style="padding:32px;">
+      <div class="label">AI use, disclosed</div>
+      <p style="color:#5a5f56; line-height:1.7;">Built with Claude Code as pair programmer under the team's product direction. Every headline number is recomputed by independent, non AI code before we trust it. The in app chat runs on OpenAI, grounded on the user's own numbers, educational only. Full disclosure in the repo.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Sage Invest · Team Lakers</span><span>10</span></div>
+</section>
+
+<!-- 11 · chat -->
+<section>
+  <h2>Ask Sage: the advisor explains itself</h2>
+  <div style="display:flex; gap:40px; margin-top:34px; align-items:flex-start;">
+    <div class="card" style="flex:1; padding:32px;">
+      <p class="q">"Is −22.9% a lot? What does it mean for me?"</p>
+      <p style="margin-top:18px; color:#5a5f56;">"A drawdown of −22.9% means that, at its worst point in the past, this portfolio dropped by that much from its peak. With your −25% limit it is significant but within what you said you could hold…"</p>
+    </div>
+    <div style="flex:1;">
+      <p style="font-size:20px; line-height:1.6;"><b>Grounded.</b> The chat knows this user's tier, loss limit, weights and results, so answers are about their portfolio, not generic finance.</p>
+      <p style="font-size:20px; line-height:1.6; margin-top:16px;"><b>Bounded.</b> Educational answers only, never advice, honest about the method's limits.</p>
+      <p style="font-size:20px; line-height:1.6; margin-top:16px;"><b>Optional.</b> Without an API key the chat simply does not exist, and nothing else depends on it.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Sage Invest · Team Lakers</span><span>11</span></div>
+</section>
+
+<!-- 12 · close -->
+<section>
+  <h2>Where this goes next</h2>
+  <div class="row" style="margin-top:26px;">
+    <div class="card"><div class="label">Next</div><p style="font-weight:700;">A cash tier</p><p style="color:#5a5f56; margin-top:8px;">Short horizons deserve money market funds, not a warning.</p></div>
+    <div class="card"><div class="label">Next</div><p style="font-weight:700;">Rebalancing advisor</p><p style="color:#5a5f56; margin-top:8px;">Our backtest says yearly is enough; see the appendix.</p></div>
+    <div class="card"><div class="label">Next</div><p style="font-weight:700;">Suitability reports</p><p style="color:#5a5f56; margin-top:8px;">Exportable MiFID style documentation of every recommendation.</p></div>
+  </div>
+  <div style="margin-top:36px;">
+    <div class="label">Who owns what</div>
+    <p style="margin-top:8px;">
+      <span class="pill">Daniel · product and demo</span>
+      <span class="pill">Martin · data pipeline</span>
+      <span class="pill">Vasileios · method and metrics</span>
+      <span class="pill">Greta · verification and limitations</span>
+    </p>
+  </div>
+  <div style="margin-top:44px;">
+    <p style="font-size:28px; font-weight:800;">Thank you. Questions welcome.</p>
+    <p class="url" style="font-size:20px; margin-top:8px;">lakersteam.streamlit.app</p>
+  </div>
+  <div class="footer"><span>Sage Invest · Team Lakers</span><span>12</span></div>
+</section>
+
+<!-- 13 · appendix -->
+<section>
+  <h2>Appendix: how often should you rebalance?</h2>
+  <p class="sub" style="margin-top:0;">Same recommended portfolio, five maintenance policies, twelve years of history.</p>
+  <div class="card" style="margin-top:24px; padding:10px 18px;">
+    <table>
+      <tr><th>Policy</th><th>Return per year</th><th>Worst fall</th><th>Verdict</th></tr>
+      <tr><td>Never rebalance</td><td>9.4%</td><td class="red">−15.5%</td><td><span class="pill red">drifts past the −15% limit</span></td></tr>
+      <tr><td>Monthly</td><td>8.3%</td><td>−14.5%</td><td><span class="pill">safe, extra effort</span></td></tr>
+      <tr><td>Quarterly</td><td>8.4%</td><td>−14.1%</td><td><span class="pill">safe</span></td></tr>
+      <tr><td>Yearly</td><td>8.3%</td><td>−14.1%</td><td><span class="pill">safe, our advice</span></td></tr>
+      <tr><td>On 5 point drift</td><td>8.5%</td><td>−14.4%</td><td><span class="pill">safe, our advice</span></td></tr>
+    </table>
+  </div>
+  <p class="sub" style="font-size:18px;">Rebalancing is risk control, not extra return. Skipping it looks better on paper only because the mix quietly drifts riskier than the user agreed to. Yearly, or when any fund drifts five points from target, captures the benefit.</p>
+  <div class="footer"><span>Sage Invest · Team Lakers</span><span>13</span></div>
+</section>
+
+</body>
+</html>
