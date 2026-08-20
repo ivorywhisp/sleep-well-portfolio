@@ -58,4 +58,4 @@ See [AI_USE_DISCLOSURE.md](AI_USE_DISCLOSURE.md).
 
 ---
 
-*The repository name (`sleep-well-portfolio`) is a legacy of the project's first iteration; the product is Sage Invest, by team Lakers.*
+*Repository: `sage-invest`. The product is Sage Invest, by team Lakers.*
